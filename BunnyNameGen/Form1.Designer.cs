@@ -43,12 +43,15 @@
             this.label3 = new System.Windows.Forms.Label();
             this.label2 = new System.Windows.Forms.Label();
             this.label1 = new System.Windows.Forms.Label();
-            this.TB_GeneratedNames = new System.Windows.Forms.TextBox();
+            this.TB_Output = new System.Windows.Forms.TextBox();
             this.menuStrip1 = new System.Windows.Forms.MenuStrip();
             this.fileToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.loadDatasetsToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.toolStripSeparator1 = new System.Windows.Forms.ToolStripSeparator();
+            this.quitToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.statusStrip1 = new System.Windows.Forms.StatusStrip();
             this.SSLabel1 = new System.Windows.Forms.ToolStripStatusLabel();
+            this.FD_OpenDataset = new System.Windows.Forms.OpenFileDialog();
             ((System.ComponentModel.ISupportInitialize)(this.SC_Container1)).BeginInit();
             this.SC_Container1.Panel1.SuspendLayout();
             this.SC_Container1.Panel2.SuspendLayout();
@@ -81,8 +84,8 @@
             // SC_Container1.Panel2
             // 
             this.SC_Container1.Panel2.Controls.Add(this.SC_Container2);
-            this.SC_Container1.Size = new System.Drawing.Size(484, 338);
-            this.SC_Container1.SplitterDistance = 40;
+            this.SC_Container1.Size = new System.Drawing.Size(484, 316);
+            this.SC_Container1.SplitterDistance = 37;
             this.SC_Container1.TabIndex = 0;
             // 
             // BT_GenerateData
@@ -133,8 +136,8 @@
             // 
             // SC_Container2.Panel2
             // 
-            this.SC_Container2.Panel2.Controls.Add(this.TB_GeneratedNames);
-            this.SC_Container2.Size = new System.Drawing.Size(484, 294);
+            this.SC_Container2.Panel2.Controls.Add(this.TB_Output);
+            this.SC_Container2.Size = new System.Drawing.Size(484, 275);
             this.SC_Container2.SplitterDistance = 211;
             this.SC_Container2.TabIndex = 0;
             // 
@@ -241,14 +244,16 @@
             this.label1.TabIndex = 0;
             this.label1.Text = "Min. Word Length";
             // 
-            // TB_GeneratedNames
+            // TB_Output
             // 
-            this.TB_GeneratedNames.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.TB_GeneratedNames.Location = new System.Drawing.Point(0, 0);
-            this.TB_GeneratedNames.Multiline = true;
-            this.TB_GeneratedNames.Name = "TB_GeneratedNames";
-            this.TB_GeneratedNames.Size = new System.Drawing.Size(269, 294);
-            this.TB_GeneratedNames.TabIndex = 0;
+            this.TB_Output.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.TB_Output.Font = new System.Drawing.Font("Microsoft Sans Serif", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.TB_Output.Location = new System.Drawing.Point(0, 0);
+            this.TB_Output.Multiline = true;
+            this.TB_Output.Name = "TB_Output";
+            this.TB_Output.ScrollBars = System.Windows.Forms.ScrollBars.Vertical;
+            this.TB_Output.Size = new System.Drawing.Size(269, 275);
+            this.TB_Output.TabIndex = 0;
             // 
             // menuStrip1
             // 
@@ -263,7 +268,9 @@
             // fileToolStripMenuItem
             // 
             this.fileToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
-            this.loadDatasetsToolStripMenuItem});
+            this.loadDatasetsToolStripMenuItem,
+            this.toolStripSeparator1,
+            this.quitToolStripMenuItem});
             this.fileToolStripMenuItem.Name = "fileToolStripMenuItem";
             this.fileToolStripMenuItem.Size = new System.Drawing.Size(37, 20);
             this.fileToolStripMenuItem.Text = "File";
@@ -273,6 +280,19 @@
             this.loadDatasetsToolStripMenuItem.Name = "loadDatasetsToolStripMenuItem";
             this.loadDatasetsToolStripMenuItem.Size = new System.Drawing.Size(142, 22);
             this.loadDatasetsToolStripMenuItem.Text = "Load Dataset";
+            this.loadDatasetsToolStripMenuItem.Click += new System.EventHandler(this.loadDatasetsToolStripMenuItem_Click);
+            // 
+            // toolStripSeparator1
+            // 
+            this.toolStripSeparator1.Name = "toolStripSeparator1";
+            this.toolStripSeparator1.Size = new System.Drawing.Size(139, 6);
+            // 
+            // quitToolStripMenuItem
+            // 
+            this.quitToolStripMenuItem.Name = "quitToolStripMenuItem";
+            this.quitToolStripMenuItem.Size = new System.Drawing.Size(142, 22);
+            this.quitToolStripMenuItem.Text = "Quit";
+            this.quitToolStripMenuItem.Click += new System.EventHandler(this.quitToolStripMenuItem_Click);
             // 
             // statusStrip1
             // 
@@ -294,9 +314,9 @@
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(484, 362);
-            this.Controls.Add(this.statusStrip1);
             this.Controls.Add(this.SC_Container1);
             this.Controls.Add(this.menuStrip1);
+            this.Controls.Add(this.statusStrip1);
             this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.FixedSingle;
             this.Name = "Form1";
             this.Text = "Bunny\'s Name Generator";
@@ -338,7 +358,6 @@
         private System.Windows.Forms.Label label3;
         private System.Windows.Forms.Label label2;
         private System.Windows.Forms.Label label1;
-        private System.Windows.Forms.TextBox TB_GeneratedNames;
         private System.Windows.Forms.Button BT_GenerateData;
         private System.Windows.Forms.ComboBox CB_Datasets;
         private System.Windows.Forms.Label LB_DatasetChoice;
@@ -347,6 +366,10 @@
         private System.Windows.Forms.ToolStripMenuItem loadDatasetsToolStripMenuItem;
         private System.Windows.Forms.StatusStrip statusStrip1;
         private System.Windows.Forms.ToolStripStatusLabel SSLabel1;
+        private System.Windows.Forms.TextBox TB_Output;
+        private System.Windows.Forms.ToolStripSeparator toolStripSeparator1;
+        private System.Windows.Forms.ToolStripMenuItem quitToolStripMenuItem;
+        private System.Windows.Forms.OpenFileDialog FD_OpenDataset;
     }
 }
 

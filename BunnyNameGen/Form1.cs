@@ -1,8 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel;
+using System.Drawing;
+using System.Drawing.Text;
 using System.Globalization;
 using System.IO;
 using System.Linq;
+using System.Text;
 using System.Text.RegularExpressions;
 using System.Windows.Forms;
 
@@ -10,7 +14,10 @@ namespace BunnyNameGen
 {
     public partial class Form1 : Form
     {
-        List<string> datasetNames;
+        PrivateFontCollection fonts;
+
+        BindingSource datasetNameBinding;
+        BindingList<string> datasetNames;
         // Gotta be honest and say I have no idea what I was doing with this.
         // It certainly looks interesting though and seems to do the job
         Dictionary<string, Dictionary<string, Dictionary<string, List<string>>>> datasets;
@@ -22,14 +29,24 @@ namespace BunnyNameGen
         {
             InitializeComponent();
 
-            datasetNames = new List<string>();
+            datasetNames = new BindingList<string>();
+            datasetNameBinding = new BindingSource();
+            datasetNameBinding.DataSource = datasetNames;
+            CB_Datasets.DataSource = datasetNameBinding;
+
             datasets = new Dictionary<string, Dictionary<string, Dictionary<string, List<string>>>>();
             rand = new Random();
 
-            loadAllDatasets();
+            loadDefaultDatasets();
+
+            fonts = new PrivateFontCollection();
+            fonts.AddFontFile("OpenSans-Regular.ttf");
+            TB_Output.Font = new Font(fonts.Families[0], 11, FontStyle.Regular);
+
+            FD_OpenDataset.InitialDirectory = Application.StartupPath;
         }
 
-        private void loadAllDatasets()
+        private void loadDefaultDatasets()
         {
             if(File.Exists(DefaultDatasetsFile))
             {
@@ -48,10 +65,8 @@ namespace BunnyNameGen
 
             foreach (string s in datasetNames)
             {
-                loadDataset(s);
+                loadDataset("Datasets/" + s + ".txt");
             }
-
-            CB_Datasets.DataSource = datasetNames;
         }
 
         private void loadDataset(string datasetName)
@@ -63,10 +78,11 @@ namespace BunnyNameGen
 
             List<string> fileWords = new List<string>();
 
-            if (File.Exists("Datasets/" + datasetName + ".txt"))
+            if (File.Exists(datasetName))
             {
                 string line;
-                StreamReader datasetFile = new StreamReader("Datasets/" + datasetName + ".txt");
+                // Don't know if it's right to use that encoding on every file but I don't really give a shit
+                StreamReader datasetFile = new StreamReader(datasetName, Encoding.GetEncoding(1252));
 
                 while ((line = datasetFile.ReadLine()) != null)
                 {
@@ -181,7 +197,7 @@ namespace BunnyNameGen
                 }
             }
 
-            datasets.Add(datasetName, newDataset);
+            datasets.Add(System.IO.Path.GetFileNameWithoutExtension(datasetName), newDataset);
         }
 
         private void BT_GenerateData_Click(object sender, EventArgs e)
@@ -190,7 +206,7 @@ namespace BunnyNameGen
 
             if (CheckProperNames.Checked)
             {
-                for (int i = 0; i < NUD_NumberOfNames.Value; i++)
+                for (int i = 0; i < NUD_NamesToGenerate.Value; i++)
                 {
                     string newName = "";
                     for (int i2 = 0; i2 < NUD_NumberOfNames.Value; i2++)
@@ -207,7 +223,7 @@ namespace BunnyNameGen
             }
             else
             {
-                for (int i = 0; i < NUD_NumberOfNames.Value; i++)
+                for (int i = 0; i < NUD_NamesToGenerate.Value; i++)
                 {
                     string newWord = generateWord();
 
@@ -217,8 +233,8 @@ namespace BunnyNameGen
                         i--;
                 }
             }
-                        
-            TB_GeneratedNames.Text = textBoxText;
+              
+            TB_Output.Text = textBoxText;
         }
 
         private string generateWord()
@@ -306,6 +322,20 @@ namespace BunnyNameGen
                 LB_NumberOfNames.Enabled = false;
                 NUD_NumberOfNames.Enabled = false;
             }
+        }
+
+        private void quitToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            this.Close();
+        }
+
+        private void loadDatasetsToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            FD_OpenDataset.Filter = "Text files (*.txt)|*.txt";
+            FD_OpenDataset.ShowDialog();
+
+            datasetNames.Add(System.IO.Path.GetFileNameWithoutExtension(FD_OpenDataset.FileName));
+            loadDataset(FD_OpenDataset.FileName);
         }
     }
 }
