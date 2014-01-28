@@ -18,10 +18,15 @@ namespace BunnyNameGen
 
         BindingSource datasetNameBinding;
         BindingList<string> datasetNames;
+        Dictionary<string, List<string>> datasets;
+
         // Gotta be honest and say I have no idea what I was doing with this.
         // It certainly looks interesting though and seems to do the job
-        Dictionary<string, Dictionary<string, Dictionary<string, List<string>>>> datasets;
+        Dictionary<string, Dictionary<string, Dictionary<string, List<string>>>> datasetPairs;
+        
         Random rand;
+
+        StreamWriter logFile;
 
         const string DefaultDatasetsFile = "Datasets/DatasetNames.txt";
 
@@ -29,12 +34,16 @@ namespace BunnyNameGen
         {
             InitializeComponent();
 
+            logFile = new StreamWriter("LogFile.txt");
+
             datasetNames = new BindingList<string>();
             datasetNameBinding = new BindingSource();
             datasetNameBinding.DataSource = datasetNames;
             CB_Datasets.DataSource = datasetNameBinding;
 
-            datasets = new Dictionary<string, Dictionary<string, Dictionary<string, List<string>>>>();
+            datasets = new Dictionary<string, List<string>>();
+
+            datasetPairs = new Dictionary<string, Dictionary<string, Dictionary<string, List<string>>>>();
             rand = new Random();
 
             loadDefaultDatasets();
@@ -61,6 +70,7 @@ namespace BunnyNameGen
             else
             {
                 SSLabel1.Text = "ERROR: COULD NOT FIND " + DefaultDatasetsFile + ". NO DATASETS LOADED";
+                logFile.WriteLine("ERROR: COULD NOT FIND " + DefaultDatasetsFile + ". NO DATASETS LOADED");
             }
 
             foreach (string s in datasetNames)
@@ -95,10 +105,12 @@ namespace BunnyNameGen
                 }
 
                 datasetFile.Close();
+                datasets.Add(System.IO.Path.GetFileNameWithoutExtension(datasetName), fileWords);
             }
             else
             {
                 SSLabel1.Text = "ERROR: COULD NOT FIND " + datasetName + " FILE. NOT LOADED";
+                logFile.WriteLine("ERROR: COULD NOT FIND " + datasetName + " FILE. NOT LOADED");
             }
 
             // Load all pairs
@@ -197,7 +209,7 @@ namespace BunnyNameGen
                 }
             }
 
-            datasets.Add(System.IO.Path.GetFileNameWithoutExtension(datasetName), newDataset);
+            datasetPairs.Add(System.IO.Path.GetFileNameWithoutExtension(datasetName), newDataset);
         }
 
         private void BT_GenerateData_Click(object sender, EventArgs e)
@@ -241,15 +253,15 @@ namespace BunnyNameGen
         {
             string newWord;
 
-            int FPsize = datasets[datasetNames[CB_Datasets.SelectedIndex]]["first_pairs"].Count;
-            newWord = datasets[datasetNames[CB_Datasets.SelectedIndex]]["first_pairs"].Keys.ElementAt<string>(rand.Next(FPsize));
+            int FPsize = datasetPairs[datasetNames[CB_Datasets.SelectedIndex]]["first_pairs"].Count;
+            newWord = datasetPairs[datasetNames[CB_Datasets.SelectedIndex]]["first_pairs"].Keys.ElementAt<string>(rand.Next(FPsize));
 
             bool wordComplete = false;
             int wordLength = rand.Next((int)NUD_MinWordLength.Value, (int)NUD_MaxWordLength.Value);
             while (!wordComplete)
             {
-                int size = datasets[datasetNames[CB_Datasets.SelectedIndex]]["normal_pairs"][newWord.Substring(newWord.Length - 2)].Count;
-                string nextChar = datasets[datasetNames[CB_Datasets.SelectedIndex]]["normal_pairs"][newWord.Substring(newWord.Length - 2)].ElementAt<string>(rand.Next(size));
+                int size = datasetPairs[datasetNames[CB_Datasets.SelectedIndex]]["normal_pairs"][newWord.Substring(newWord.Length - 2)].Count;
+                string nextChar = datasetPairs[datasetNames[CB_Datasets.SelectedIndex]]["normal_pairs"][newWord.Substring(newWord.Length - 2)].ElementAt<string>(rand.Next(size));
 
                 newWord = newWord + nextChar;
                 if (newWord.Length == wordLength)
@@ -277,8 +289,8 @@ namespace BunnyNameGen
         private string addPrefix(string wordIn)
         {
             bool chopToFit = false;
-            int prefixSize = datasets[datasetNames[CB_Datasets.SelectedIndex]]["fixes"]["prefixes"].Count;
-            string prefix = datasets[datasetNames[CB_Datasets.SelectedIndex]]["fixes"]["prefixes"].ElementAt<string>(rand.Next(prefixSize));
+            int prefixSize = datasetPairs[datasetNames[CB_Datasets.SelectedIndex]]["fixes"]["prefixes"].Count;
+            string prefix = datasetPairs[datasetNames[CB_Datasets.SelectedIndex]]["fixes"]["prefixes"].ElementAt<string>(rand.Next(prefixSize));
             string wordOut = "";
 
             if (Regex.Match(prefix, "[aeiouy]$").Success)
@@ -295,8 +307,8 @@ namespace BunnyNameGen
         private string addSuffix(string wordIn)
         {
             bool chopToFit = false;
-            int suffixSize = datasets[datasetNames[CB_Datasets.SelectedIndex]]["fixes"]["suffixes"].Count;
-            string suffix = datasets[datasetNames[CB_Datasets.SelectedIndex]]["fixes"]["suffixes"].ElementAt<string>(rand.Next(suffixSize));
+            int suffixSize = datasetPairs[datasetNames[CB_Datasets.SelectedIndex]]["fixes"]["suffixes"].Count;
+            string suffix = datasetPairs[datasetNames[CB_Datasets.SelectedIndex]]["fixes"]["suffixes"].ElementAt<string>(rand.Next(suffixSize));
             string wordOut = "";
 
             if (Regex.Match(suffix, "^[aeiouy]").Success)
@@ -336,6 +348,42 @@ namespace BunnyNameGen
 
             datasetNames.Add(System.IO.Path.GetFileNameWithoutExtension(FD_OpenDataset.FileName));
             loadDataset(FD_OpenDataset.FileName);
+        }
+
+        private void toTextToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            if(!Directory.Exists("Output"))
+                Directory.CreateDirectory("Output");
+
+            string datasetName = datasetNames[CB_Datasets.SelectedIndex];
+
+            StreamWriter datasetOut = new StreamWriter("Output\\" + datasetName + ".txt");
+            // StreamWriter datasetOut = new StreamWriter(Path.Combine("Output\\", datasetName, ".txt"));
+
+            for (int i = 0; i < datasets[datasetName].Count; i += 10)
+            {
+                string line = "";
+                for (int i2 = 0; i2 < 10; i2++)
+                {
+                    if (i + i2 >= datasets[datasetName].Count)
+                        break;
+
+                    line += datasets[datasetName][i+i2] + " ";
+                }
+                datasetOut.WriteLine(line);
+            }
+
+            datasetOut.Close();
+        }
+
+        private void toXMLToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+
+        }
+
+        private void Form1_FormClosing(object sender, FormClosingEventArgs e)
+        {
+            logFile.Close();
         }
     }
 }
