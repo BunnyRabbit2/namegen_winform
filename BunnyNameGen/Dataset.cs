@@ -4,7 +4,6 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
-using System.Xml;
 using System.Xml.Linq;
 
 namespace BunnyNameGen
@@ -31,7 +30,7 @@ namespace BunnyNameGen
 
         public bool loadDatasetTxt(string nameIn)
         {
-            name = nameIn;
+            name = Path.GetFileNameWithoutExtension(nameIn);
             string datasetName = name + ".txt";
 
             if (File.Exists(datasetName))
@@ -65,7 +64,7 @@ namespace BunnyNameGen
 
         public bool loadDatasetXML(string nameIn)
         {
-            name = nameIn;
+            name = Path.GetFileNameWithoutExtension(nameIn);
             string datasetName = "XMLDatasets/" + name + ".xml";
             List<string> fileWords = new List<string>();
 

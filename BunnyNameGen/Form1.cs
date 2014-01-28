@@ -5,10 +5,7 @@ using System.Drawing;
 using System.Drawing.Text;
 using System.Globalization;
 using System.IO;
-using System.Linq;
 using System.Reflection;
-using System.Text;
-using System.Text.RegularExpressions;
 using System.Windows.Forms;
 using System.Xml;
 
@@ -65,12 +62,8 @@ namespace BunnyNameGen
                 string[] XmlFiles = Directory.GetFiles("XMLDatasets", "*.xml");
                 foreach( string file in XmlFiles )
                 {
-                    datasetNames.Add(Path.GetFileNameWithoutExtension(file));   
-                }
-
-                foreach (string s in datasetNames)
-                {
-                    loadDataset(s);
+                    datasetNames.Add(Path.GetFileNameWithoutExtension(file));
+                    loadDataset(file);
                 }
             }
             else
@@ -85,11 +78,31 @@ namespace BunnyNameGen
         {
             Dataset newDataset = new Dataset();
 
-            if (newDataset.loadDatasetXML(datasetName))
+            bool loadFailed = true;
+
+            if (Path.GetExtension(datasetName) == ".xml")
             {
-                datasets.Add(datasetName, newDataset);
+                if (newDataset.loadDatasetXML(datasetName))
+                {
+                    datasets.Add(Path.GetFileNameWithoutExtension(datasetName), newDataset);
+                    loadFailed = false;
+                }
+            }
+            else if (Path.GetExtension(datasetName) == ".txt")
+            {
+                if (newDataset.loadDatasetTxt(datasetName))
+                {
+                    datasets.Add(Path.GetFileNameWithoutExtension(datasetName), newDataset);
+                    loadFailed = false;
+                }
             }
             else
+            {
+                SSLabel1.Text = "ERROR: " + datasetName + "HAS INCORRECT EXTENSION. FILE NOT LOADED";
+                logFile.LogError(datasetName + "HAS INCORRECT EXTENSION. FILE NOT LOADED");
+            }
+
+            if (loadFailed)
             {
                 SSLabel1.Text = "ERROR: COULD NOT FIND " + datasetName + " FILE. NOT LOADED";
                 logFile.LogError("COULD NOT FIND " + datasetName + " FILE. NOT LOADED");
@@ -154,7 +167,7 @@ namespace BunnyNameGen
 
         private void loadDatasetsToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            FD_OpenDataset.Filter = "Text files (*.txt)|*.txt";
+            FD_OpenDataset.Filter = "Text files (*.txt)|*.txt|XML Files (*.xml)|*.xml";
             FD_OpenDataset.ShowDialog();
 
             datasetNames.Add(System.IO.Path.GetFileNameWithoutExtension(FD_OpenDataset.FileName));
