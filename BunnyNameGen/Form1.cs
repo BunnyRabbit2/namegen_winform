@@ -9,6 +9,7 @@ using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Windows.Forms;
+using System.Xml;
 
 namespace BunnyNameGen
 {
@@ -71,6 +72,7 @@ namespace BunnyNameGen
             {
                 SSLabel1.Text = "ERROR: COULD NOT FIND " + DefaultDatasetsFile + ". NO DATASETS LOADED";
                 logFile.WriteLine("ERROR: COULD NOT FIND " + DefaultDatasetsFile + ". NO DATASETS LOADED");
+                logFile.Flush();
             }
 
             foreach (string s in datasetNames)
@@ -100,7 +102,8 @@ namespace BunnyNameGen
 
                     foreach (string w in lineWords)
                     {
-                        fileWords.Add(w);
+                        if(w != "")
+                            fileWords.Add(w);
                     }
                 }
 
@@ -111,6 +114,7 @@ namespace BunnyNameGen
             {
                 SSLabel1.Text = "ERROR: COULD NOT FIND " + datasetName + " FILE. NOT LOADED";
                 logFile.WriteLine("ERROR: COULD NOT FIND " + datasetName + " FILE. NOT LOADED");
+                logFile.Flush();
             }
 
             // Load all pairs
@@ -358,27 +362,65 @@ namespace BunnyNameGen
             string datasetName = datasetNames[CB_Datasets.SelectedIndex];
 
             StreamWriter datasetOut = new StreamWriter("Output\\" + datasetName + ".txt");
+
+            // Path.combine doesn't work for some reason :( Need to fix
             // StreamWriter datasetOut = new StreamWriter(Path.Combine("Output\\", datasetName, ".txt"));
 
-            for (int i = 0; i < datasets[datasetName].Count; i += 10)
+            if (datasetOut != null)
             {
-                string line = "";
-                for (int i2 = 0; i2 < 10; i2++)
+                for (int i = 0; i < datasets[datasetName].Count; i += 10)
                 {
-                    if (i + i2 >= datasets[datasetName].Count)
-                        break;
+                    string line = "";
+                    for (int i2 = 0; i2 < 10; i2++)
+                    {
+                        if (i + i2 >= datasets[datasetName].Count)
+                            break;
 
-                    line += datasets[datasetName][i+i2] + " ";
+                        line += datasets[datasetName][i + i2] + " ";
+                    }
+                    datasetOut.WriteLine(line);
                 }
-                datasetOut.WriteLine(line);
-            }
 
-            datasetOut.Close();
+                datasetOut.Close();
+            }
+            else
+            {
+                logFile.WriteLine("Failed to create StreamWriter for " + datasetName + ". No output made");
+                logFile.Flush();
+            }
         }
 
         private void toXMLToolStripMenuItem_Click(object sender, EventArgs e)
         {
+            if(!Directory.Exists("Output"))
+                Directory.CreateDirectory("Output");
 
+            string datasetName = datasetNames[CB_Datasets.SelectedIndex];
+
+            XmlWriterSettings settings = new XmlWriterSettings();
+            settings.Indent = true;
+            XmlWriter datasetOut = XmlWriter.Create("Output\\" + datasetName + ".xml", settings);
+
+            if (datasetOut != null)
+            {
+                datasetOut.WriteStartDocument();
+                datasetOut.WriteStartElement("DatasetWords");
+
+                foreach (string word in datasets[datasetName])
+                {
+                    datasetOut.WriteElementString("Word", word);
+                }
+
+                datasetOut.WriteEndElement();
+                datasetOut.WriteEndDocument();
+
+                datasetOut.Close();
+            }
+            else
+            {
+                logFile.WriteLine("Failed to create XmlWriter for " + datasetName + ". No output made");
+                logFile.Flush();
+            }
         }
 
         private void Form1_FormClosing(object sender, FormClosingEventArgs e)
