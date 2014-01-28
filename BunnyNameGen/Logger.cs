@@ -24,7 +24,7 @@ namespace BunnyNameGen
 
         public void LogInfo(string infoIn)
         {
-            logFile.WriteLine("ERROR: {0} {1}, " + infoIn, DateTime.Now.ToShortTimeString(), DateTime.Now.ToShortDateString());
+            logFile.WriteLine("INFO: {0} {1}, " + infoIn, DateTime.Now.ToShortTimeString(), DateTime.Now.ToShortDateString());
             logFile.Flush();
         }
     }

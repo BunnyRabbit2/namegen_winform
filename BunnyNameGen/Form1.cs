@@ -6,6 +6,7 @@ using System.Drawing.Text;
 using System.Globalization;
 using System.IO;
 using System.Linq;
+using System.Reflection;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Windows.Forms;
@@ -35,6 +36,8 @@ namespace BunnyNameGen
         {
             InitializeComponent();
 
+            logFile = new Logger();
+
             datasetNames = new BindingList<string>();
             datasetNameBinding = new BindingSource();
             datasetNameBinding.DataSource = datasetNames;
@@ -53,7 +56,7 @@ namespace BunnyNameGen
 
             FD_OpenDataset.InitialDirectory = Application.StartupPath;
 
-            logFile.LogInfo("Started BunnyNameGen V" + Version
+            logFile.LogInfo("Started BunnyNameGen Version " + Assembly.GetExecutingAssembly().GetName().Version.ToString());
         }
 
         private void loadDefaultDatasets()
@@ -438,6 +441,12 @@ namespace BunnyNameGen
         private void Form1_FormClosing(object sender, FormClosingEventArgs e)
         {
 
+        }
+
+        private void infoToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            MessageBox.Show("Version Number: " + Assembly.GetExecutingAssembly().GetName().Version.ToString(), "BunnyNameGen",
+            MessageBoxButtons.OKCancel, MessageBoxIcon.Asterisk);
         }
     }
 }
