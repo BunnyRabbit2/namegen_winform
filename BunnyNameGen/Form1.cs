@@ -27,15 +27,13 @@ namespace BunnyNameGen
         
         Random rand;
 
-        StreamWriter logFile;
+        Logger logFile;
 
         const string DefaultDatasetsFile = "Datasets/DatasetNames.txt";
 
         public Form1()
         {
             InitializeComponent();
-
-            logFile = new StreamWriter("LogFile.txt");
 
             datasetNames = new BindingList<string>();
             datasetNameBinding = new BindingSource();
@@ -54,11 +52,14 @@ namespace BunnyNameGen
             TB_Output.Font = new Font(fonts.Families[0], 11, FontStyle.Regular);
 
             FD_OpenDataset.InitialDirectory = Application.StartupPath;
+
+            logFile.LogInfo("Started BunnyNameGen V" + Version
         }
 
         private void loadDefaultDatasets()
         {
-            if(File.Exists(DefaultDatasetsFile))
+            /*
+            if (File.Exists(DefaultDatasetsFile))
             {
                 string line;
                 StreamReader datasetsFile = new StreamReader(DefaultDatasetsFile);
@@ -71,14 +72,28 @@ namespace BunnyNameGen
             else
             {
                 SSLabel1.Text = "ERROR: COULD NOT FIND " + DefaultDatasetsFile + ". NO DATASETS LOADED";
-                logFile.WriteLine("ERROR: COULD NOT FIND " + DefaultDatasetsFile + ". NO DATASETS LOADED");
-                logFile.Flush();
+                logFile.LogError("COULD NOT FIND " + DefaultDatasetsFile + ". NO DATASETS LOADED");
             }
 
             foreach (string s in datasetNames)
             {
                 loadDataset("Datasets/" + s + ".txt");
             }
+             */
+            if (Directory.Exists("XMLDatasets"))
+            {
+                string[] XmlFiles = Directory.GetFiles("XMLDatasets", "*.xml");
+                foreach( string file in XmlFiles )
+                {
+                    datasetNames.Add(Path.GetFileNameWithoutExtension(file));   
+                }
+            }
+            else
+            {
+                SSLabel1.Text = "INFO: No XMLDatasets folder. No datasets loaded";
+                logFile.LogInfo("No XMLDatasets folder. No datasets loaded");
+            }
+
         }
 
         private void loadDataset(string datasetName)
@@ -113,8 +128,7 @@ namespace BunnyNameGen
             else
             {
                 SSLabel1.Text = "ERROR: COULD NOT FIND " + datasetName + " FILE. NOT LOADED";
-                logFile.WriteLine("ERROR: COULD NOT FIND " + datasetName + " FILE. NOT LOADED");
-                logFile.Flush();
+                logFile.LogError("COULD NOT FIND " + datasetName + " FILE. NOT LOADED");
             }
 
             // Load all pairs
@@ -385,8 +399,7 @@ namespace BunnyNameGen
             }
             else
             {
-                logFile.WriteLine("Failed to create StreamWriter for " + datasetName + ". No output made");
-                logFile.Flush();
+                logFile.LogError("Failed to create StreamWriter for " + datasetName + ". No output made");
             }
         }
 
@@ -418,14 +431,13 @@ namespace BunnyNameGen
             }
             else
             {
-                logFile.WriteLine("Failed to create XmlWriter for " + datasetName + ". No output made");
-                logFile.Flush();
+                logFile.LogError("Failed to create XmlWriter for " + datasetName + ". No output made");
             }
         }
 
         private void Form1_FormClosing(object sender, FormClosingEventArgs e)
         {
-            logFile.Close();
+
         }
     }
 }
