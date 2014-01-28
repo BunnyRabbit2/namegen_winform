@@ -62,8 +62,8 @@ namespace BunnyNameGen
                 string[] XmlFiles = Directory.GetFiles("XMLDatasets", "*.xml");
                 foreach( string file in XmlFiles )
                 {
-                    datasetNames.Add(Path.GetFileNameWithoutExtension(file));
-                    loadDataset(file);
+                    if(loadDataset(file))
+                        datasetNames.Add(Path.GetFileNameWithoutExtension(file));
                 }
             }
             else
@@ -74,8 +74,16 @@ namespace BunnyNameGen
 
         }
 
-        private void loadDataset(string datasetName)
+        private bool loadDataset(string datasetName)
         {
+            if (datasetNames.Contains(Path.GetFileNameWithoutExtension(datasetName)))
+            {
+                SSLabel1.Text = "ERROR: " + datasetName + " ALREADY LOADED. FILE NOT LOADED";
+                logFile.LogError(datasetName + " ALREADY LOADED. FILE NOT LOADED");
+
+                return false;
+            }
+
             Dataset newDataset = new Dataset();
 
             bool loadFailed = true;
@@ -98,15 +106,21 @@ namespace BunnyNameGen
             }
             else
             {
-                SSLabel1.Text = "ERROR: " + datasetName + "HAS INCORRECT EXTENSION. FILE NOT LOADED";
-                logFile.LogError(datasetName + "HAS INCORRECT EXTENSION. FILE NOT LOADED");
+                SSLabel1.Text = "ERROR: " + datasetName + " HAS INCORRECT EXTENSION. FILE NOT LOADED";
+                logFile.LogError(datasetName + " HAS INCORRECT EXTENSION. FILE NOT LOADED");
+
+                return false;
             }
 
             if (loadFailed)
             {
                 SSLabel1.Text = "ERROR: COULD NOT FIND " + datasetName + " FILE. NOT LOADED";
                 logFile.LogError("COULD NOT FIND " + datasetName + " FILE. NOT LOADED");
+
+                return false;
             }
+
+            return true;
         }
 
         private void BT_GenerateData_Click(object sender, EventArgs e)
@@ -170,8 +184,8 @@ namespace BunnyNameGen
             FD_OpenDataset.Filter = "Text files (*.txt)|*.txt|XML Files (*.xml)|*.xml";
             FD_OpenDataset.ShowDialog();
 
-            datasetNames.Add(System.IO.Path.GetFileNameWithoutExtension(FD_OpenDataset.FileName));
-            loadDataset(FD_OpenDataset.FileName);
+            if(loadDataset(FD_OpenDataset.FileName))
+                datasetNames.Add(System.IO.Path.GetFileNameWithoutExtension(FD_OpenDataset.FileName));
         }
 
         private void toTextToolStripMenuItem_Click(object sender, EventArgs e)
