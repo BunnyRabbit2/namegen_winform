@@ -47,14 +47,16 @@
             this.menuStrip1 = new System.Windows.Forms.MenuStrip();
             this.fileToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.quitToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.statusStrip1 = new System.Windows.Forms.StatusStrip();
-            this.SSLabel1 = new System.Windows.Forms.ToolStripStatusLabel();
-            this.FD_OpenDataset = new System.Windows.Forms.OpenFileDialog();
             this.datasetToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.loadDatasetsToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.outputDatasetToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.toTextToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.toXMLToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.helpToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.infoToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.statusStrip1 = new System.Windows.Forms.StatusStrip();
+            this.SSLabel1 = new System.Windows.Forms.ToolStripStatusLabel();
+            this.FD_OpenDataset = new System.Windows.Forms.OpenFileDialog();
             ((System.ComponentModel.ISupportInitialize)(this.SC_Container1)).BeginInit();
             this.SC_Container1.Panel1.SuspendLayout();
             this.SC_Container1.Panel2.SuspendLayout();
@@ -262,7 +264,8 @@
             // 
             this.menuStrip1.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.fileToolStripMenuItem,
-            this.datasetToolStripMenuItem});
+            this.datasetToolStripMenuItem,
+            this.helpToolStripMenuItem});
             this.menuStrip1.Location = new System.Drawing.Point(0, 0);
             this.menuStrip1.Name = "menuStrip1";
             this.menuStrip1.Size = new System.Drawing.Size(484, 24);
@@ -280,24 +283,9 @@
             // quitToolStripMenuItem
             // 
             this.quitToolStripMenuItem.Name = "quitToolStripMenuItem";
-            this.quitToolStripMenuItem.Size = new System.Drawing.Size(181, 22);
+            this.quitToolStripMenuItem.Size = new System.Drawing.Size(97, 22);
             this.quitToolStripMenuItem.Text = "Quit";
             this.quitToolStripMenuItem.Click += new System.EventHandler(this.quitToolStripMenuItem_Click);
-            // 
-            // statusStrip1
-            // 
-            this.statusStrip1.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
-            this.SSLabel1});
-            this.statusStrip1.Location = new System.Drawing.Point(0, 340);
-            this.statusStrip1.Name = "statusStrip1";
-            this.statusStrip1.Size = new System.Drawing.Size(484, 22);
-            this.statusStrip1.TabIndex = 2;
-            this.statusStrip1.Text = "statusStrip1";
-            // 
-            // SSLabel1
-            // 
-            this.SSLabel1.Name = "SSLabel1";
-            this.SSLabel1.Size = new System.Drawing.Size(0, 17);
             // 
             // datasetToolStripMenuItem
             // 
@@ -313,6 +301,7 @@
             this.loadDatasetsToolStripMenuItem.Name = "loadDatasetsToolStripMenuItem";
             this.loadDatasetsToolStripMenuItem.Size = new System.Drawing.Size(154, 22);
             this.loadDatasetsToolStripMenuItem.Text = "Load Dataset";
+            this.loadDatasetsToolStripMenuItem.Click += new System.EventHandler(this.loadDatasetsToolStripMenuItem_Click);
             // 
             // outputDatasetToolStripMenuItem
             // 
@@ -326,16 +315,46 @@
             // toTextToolStripMenuItem
             // 
             this.toTextToolStripMenuItem.Name = "toTextToolStripMenuItem";
-            this.toTextToolStripMenuItem.Size = new System.Drawing.Size(152, 22);
+            this.toTextToolStripMenuItem.Size = new System.Drawing.Size(115, 22);
             this.toTextToolStripMenuItem.Text = "To Text";
             this.toTextToolStripMenuItem.Click += new System.EventHandler(this.toTextToolStripMenuItem_Click);
             // 
             // toXMLToolStripMenuItem
             // 
             this.toXMLToolStripMenuItem.Name = "toXMLToolStripMenuItem";
-            this.toXMLToolStripMenuItem.Size = new System.Drawing.Size(152, 22);
+            this.toXMLToolStripMenuItem.Size = new System.Drawing.Size(115, 22);
             this.toXMLToolStripMenuItem.Text = "To XML";
             this.toXMLToolStripMenuItem.Click += new System.EventHandler(this.toXMLToolStripMenuItem_Click);
+            // 
+            // helpToolStripMenuItem
+            // 
+            this.helpToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.infoToolStripMenuItem});
+            this.helpToolStripMenuItem.Name = "helpToolStripMenuItem";
+            this.helpToolStripMenuItem.Size = new System.Drawing.Size(44, 20);
+            this.helpToolStripMenuItem.Text = "Help";
+            // 
+            // infoToolStripMenuItem
+            // 
+            this.infoToolStripMenuItem.Name = "infoToolStripMenuItem";
+            this.infoToolStripMenuItem.Size = new System.Drawing.Size(95, 22);
+            this.infoToolStripMenuItem.Text = "Info";
+            this.infoToolStripMenuItem.Click += new System.EventHandler(this.infoToolStripMenuItem_Click);
+            // 
+            // statusStrip1
+            // 
+            this.statusStrip1.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.SSLabel1});
+            this.statusStrip1.Location = new System.Drawing.Point(0, 340);
+            this.statusStrip1.Name = "statusStrip1";
+            this.statusStrip1.Size = new System.Drawing.Size(484, 22);
+            this.statusStrip1.TabIndex = 2;
+            this.statusStrip1.Text = "statusStrip1";
+            // 
+            // SSLabel1
+            // 
+            this.SSLabel1.Name = "SSLabel1";
+            this.SSLabel1.Size = new System.Drawing.Size(0, 17);
             // 
             // Form1
             // 
@@ -402,6 +421,8 @@
         private System.Windows.Forms.ToolStripMenuItem outputDatasetToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem toTextToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem toXMLToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem helpToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem infoToolStripMenuItem;
     }
 }
 

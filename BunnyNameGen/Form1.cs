@@ -5,9 +5,7 @@ using System.Drawing;
 using System.Drawing.Text;
 using System.Globalization;
 using System.IO;
-using System.Linq;
-using System.Text;
-using System.Text.RegularExpressions;
+using System.Reflection;
 using System.Windows.Forms;
 using System.Xml;
 
@@ -19,15 +17,13 @@ namespace BunnyNameGen
 
         BindingSource datasetNameBinding;
         BindingList<string> datasetNames;
-        Dictionary<string, List<string>> datasets;
+        Dictionary<string, Dataset> datasets;
 
-        // Gotta be honest and say I have no idea what I was doing with this.
-        // It certainly looks interesting though and seems to do the job
-        Dictionary<string, Dictionary<string, Dictionary<string, List<string>>>> datasetPairs;
-        
+        WordGenerator wordGen;
+
         Random rand;
 
-        StreamWriter logFile;
+        Logger logFile;
 
         const string DefaultDatasetsFile = "Datasets/DatasetNames.txt";
 
@@ -35,16 +31,17 @@ namespace BunnyNameGen
         {
             InitializeComponent();
 
-            logFile = new StreamWriter("LogFile.txt");
+            logFile = new Logger();
+
+            wordGen = new WordGenerator();
 
             datasetNames = new BindingList<string>();
             datasetNameBinding = new BindingSource();
             datasetNameBinding.DataSource = datasetNames;
             CB_Datasets.DataSource = datasetNameBinding;
 
-            datasets = new Dictionary<string, List<string>>();
+            datasets = new Dictionary<string, Dataset>();
 
-            datasetPairs = new Dictionary<string, Dictionary<string, Dictionary<string, List<string>>>>();
             rand = new Random();
 
             loadDefaultDatasets();
@@ -54,166 +51,76 @@ namespace BunnyNameGen
             TB_Output.Font = new Font(fonts.Families[0], 11, FontStyle.Regular);
 
             FD_OpenDataset.InitialDirectory = Application.StartupPath;
+
+            logFile.LogInfo("Started BunnyNameGen Version " + Assembly.GetExecutingAssembly().GetName().Version.ToString());
         }
 
         private void loadDefaultDatasets()
         {
-            if(File.Exists(DefaultDatasetsFile))
+            if (Directory.Exists("XMLDatasets"))
             {
-                string line;
-                StreamReader datasetsFile = new StreamReader(DefaultDatasetsFile);
-                while ((line = datasetsFile.ReadLine()) != null)
+                string[] XmlFiles = Directory.GetFiles("XMLDatasets", "*.xml");
+                foreach( string file in XmlFiles )
                 {
-                    datasetNames.Add(line);
+                    if(loadDataset(file))
+                        datasetNames.Add(Path.GetFileNameWithoutExtension(file));
                 }
-                datasetsFile.Close();
             }
             else
             {
-                SSLabel1.Text = "ERROR: COULD NOT FIND " + DefaultDatasetsFile + ". NO DATASETS LOADED";
-                logFile.WriteLine("ERROR: COULD NOT FIND " + DefaultDatasetsFile + ". NO DATASETS LOADED");
-                logFile.Flush();
+                SSLabel1.Text = "INFO: No XMLDatasets folder. No datasets loaded";
+                logFile.LogInfo("No XMLDatasets folder. No datasets loaded");
             }
 
-            foreach (string s in datasetNames)
-            {
-                loadDataset("Datasets/" + s + ".txt");
-            }
         }
 
-        private void loadDataset(string datasetName)
+        private bool loadDataset(string datasetName)
         {
-            Dictionary<string, Dictionary<string, List<string>>> newDataset = new Dictionary<string, Dictionary<string, List<string>>>();
-            newDataset.Add("first_pairs", new Dictionary<string, List<string>>());
-            newDataset.Add("normal_pairs", new Dictionary<string, List<string>>());
-            newDataset.Add("fixes", new Dictionary<string, List<string>>());
-
-            List<string> fileWords = new List<string>();
-
-            if (File.Exists(datasetName))
+            if (datasetNames.Contains(Path.GetFileNameWithoutExtension(datasetName)))
             {
-                string line;
-                // Don't know if it's right to use that encoding on every file but I don't really give a shit
-                StreamReader datasetFile = new StreamReader(datasetName, Encoding.GetEncoding(1252));
+                SSLabel1.Text = "ERROR: " + datasetName + " ALREADY LOADED. FILE NOT LOADED";
+                logFile.LogError(datasetName + " ALREADY LOADED. FILE NOT LOADED");
 
-                while ((line = datasetFile.ReadLine()) != null)
+                return false;
+            }
+
+            Dataset newDataset = new Dataset();
+
+            bool loadFailed = true;
+
+            if (Path.GetExtension(datasetName) == ".xml")
+            {
+                if (newDataset.loadDatasetXML(datasetName))
                 {
-                    string[] lineWords = line.Split(' ');
-
-                    foreach (string w in lineWords)
-                    {
-                        if(w != "")
-                            fileWords.Add(w);
-                    }
+                    datasets.Add(Path.GetFileNameWithoutExtension(datasetName), newDataset);
+                    loadFailed = false;
                 }
-
-                datasetFile.Close();
-                datasets.Add(System.IO.Path.GetFileNameWithoutExtension(datasetName), fileWords);
+            }
+            else if (Path.GetExtension(datasetName) == ".txt")
+            {
+                if (newDataset.loadDatasetTxt(datasetName))
+                {
+                    datasets.Add(Path.GetFileNameWithoutExtension(datasetName), newDataset);
+                    loadFailed = false;
+                }
             }
             else
             {
+                SSLabel1.Text = "ERROR: " + datasetName + " HAS INCORRECT EXTENSION. FILE NOT LOADED";
+                logFile.LogError(datasetName + " HAS INCORRECT EXTENSION. FILE NOT LOADED");
+
+                return false;
+            }
+
+            if (loadFailed)
+            {
                 SSLabel1.Text = "ERROR: COULD NOT FIND " + datasetName + " FILE. NOT LOADED";
-                logFile.WriteLine("ERROR: COULD NOT FIND " + datasetName + " FILE. NOT LOADED");
-                logFile.Flush();
+                logFile.LogError("COULD NOT FIND " + datasetName + " FILE. NOT LOADED");
+
+                return false;
             }
 
-            // Load all pairs
-            foreach (string w in fileWords)
-            {
-                string w2;
-
-                if (w == "") continue;
-                if (w.Length == 1) continue;
-                if (w.Length == 2)
-                {
-                    w2 = (w + " ").ToLower();
-                    if (!newDataset["first_pairs"].ContainsKey(w2.Substring(0, 2)))
-                    {
-                        newDataset["first_pairs"].Add(w2.Substring(0, 2), new List<string>());
-                        newDataset["first_pairs"][w2.Substring(0, 2)].Add(w2.Substring(2, 1));
-                    }
-                    else
-                    {
-                        if (!newDataset["first_pairs"][w2.Substring(0, 2)].Contains(w2.Substring(2, 1)))
-                        {
-                            newDataset["first_pairs"][w2.Substring(0, 2)].Add(w2.Substring(2, 1));
-                        }
-                    }
-                }
-
-                w2 = (w + " ").ToLower();
-
-                string pairing;
-                pairing = w2.Substring(0, 3);
-                if (!newDataset["first_pairs"].ContainsKey(pairing.Substring(0, 2)))
-                {
-                    newDataset["first_pairs"].Add(pairing.Substring(0, 2), new List<string>());
-                    newDataset["first_pairs"][pairing.Substring(0, 2)].Add(pairing.Substring(2, 1));
-                }
-                else
-                {
-                    if (!newDataset["first_pairs"][pairing.Substring(0, 2)].Contains(pairing.Substring(2, 1)))
-                    {
-                        newDataset["first_pairs"][pairing.Substring(0, 2)].Add(pairing.Substring(2, 1));
-                    }
-                }
-
-
-                for (int i = 0; i < w2.Length - 2; i++)
-                {
-                    pairing = w2.Substring(i, 3);
-                    if (!newDataset["normal_pairs"].ContainsKey(pairing.Substring(0, 2)))
-                    {
-                        newDataset["normal_pairs"].Add(pairing.Substring(0, 2), new List<string>());
-                        newDataset["normal_pairs"][pairing.Substring(0, 2)].Add(pairing.Substring(2, 1));
-                    }
-                    else
-                    {
-                        if (!newDataset["normal_pairs"][pairing.Substring(0, 2)].Contains(pairing.Substring(2, 1)))
-                        {
-                            newDataset["normal_pairs"][pairing.Substring(0, 2)].Add(pairing.Substring(2, 1));
-                        }
-                    }
-                }
-            }
-
-            // create affixes
-            newDataset["fixes"].Add("prefixes", new List<string>());
-            newDataset["fixes"].Add("suffixes", new List<string>());
-            int limit = fileWords.Count / 10;
-            int found = 0;
-            int fixLength = rand.Next(3) + 2;
-
-            while (found < limit)
-            {
-                string fix;
-                bool prefix = false;
-                string word = fileWords.ElementAt<string>(rand.Next(fileWords.Count));
-
-                if (fixLength > word.Length)
-                    continue;
-
-                if (rand.Next(1, 3) == 3)
-                {
-                    fix = word.Substring(0, fixLength);
-                    prefix = true;
-                }
-                else
-                {
-                    fix = word.Substring(word.Length - fixLength);
-                }
-
-                if (Regex.Match(fix, "[aeiouy]").Success)
-                {
-                    found++;
-                    if (prefix)
-                        newDataset["fixes"]["prefixes"].Add(fix);
-                    else
-                        newDataset["fixes"]["suffixes"].Add(fix);
-                }
-            }
-
-            datasetPairs.Add(System.IO.Path.GetFileNameWithoutExtension(datasetName), newDataset);
+            return true;
         }
 
         private void BT_GenerateData_Click(object sender, EventArgs e)
@@ -227,7 +134,7 @@ namespace BunnyNameGen
                     string newName = "";
                     for (int i2 = 0; i2 < NUD_NumberOfNames.Value; i2++)
                     {
-                        string newWord = generateWord();
+                        string newWord = wordGen.GenerateWord(datasets[datasetNames[CB_Datasets.SelectedIndex]], (int)NUD_MinWordLength.Value, (int)NUD_MaxWordLength.Value);
 
                         if (newWord.Length >= NUD_MinWordLength.Value && newWord.Length <= NUD_MaxWordLength.Value)
                             newName = newName + " " + newWord;
@@ -241,7 +148,7 @@ namespace BunnyNameGen
             {
                 for (int i = 0; i < NUD_NamesToGenerate.Value; i++)
                 {
-                    string newWord = generateWord();
+                    string newWord = wordGen.GenerateWord(datasets[datasetNames[CB_Datasets.SelectedIndex]], (int)NUD_MinWordLength.Value, (int)NUD_MaxWordLength.Value);
 
                     if (newWord.Length >= NUD_MinWordLength.Value && newWord.Length <= NUD_MaxWordLength.Value)
                         textBoxText += CultureInfo.CurrentCulture.TextInfo.ToTitleCase(newWord.ToLower()) + Environment.NewLine;
@@ -251,79 +158,6 @@ namespace BunnyNameGen
             }
               
             TB_Output.Text = textBoxText;
-        }
-
-        private string generateWord()
-        {
-            string newWord;
-
-            int FPsize = datasetPairs[datasetNames[CB_Datasets.SelectedIndex]]["first_pairs"].Count;
-            newWord = datasetPairs[datasetNames[CB_Datasets.SelectedIndex]]["first_pairs"].Keys.ElementAt<string>(rand.Next(FPsize));
-
-            bool wordComplete = false;
-            int wordLength = rand.Next((int)NUD_MinWordLength.Value, (int)NUD_MaxWordLength.Value);
-            while (!wordComplete)
-            {
-                int size = datasetPairs[datasetNames[CB_Datasets.SelectedIndex]]["normal_pairs"][newWord.Substring(newWord.Length - 2)].Count;
-                string nextChar = datasetPairs[datasetNames[CB_Datasets.SelectedIndex]]["normal_pairs"][newWord.Substring(newWord.Length - 2)].ElementAt<string>(rand.Next(size));
-
-                newWord = newWord + nextChar;
-                if (newWord.Length == wordLength)
-                    wordComplete = true;
-
-                if (nextChar == " ")
-                {
-                    if (newWord.Length > NUD_MinWordLength.Value + 1)
-                        wordComplete = true;
-                    else
-                        return "";
-                }
-
-                if (wordComplete)
-                    if (rand.Next(1, 3) == 3)
-                        if (rand.Next(1, 2) == 1)
-                            newWord = addPrefix(newWord);
-                        else
-                            newWord = addSuffix(newWord);
-            }
-
-            return newWord;
-        }
-
-        private string addPrefix(string wordIn)
-        {
-            bool chopToFit = false;
-            int prefixSize = datasetPairs[datasetNames[CB_Datasets.SelectedIndex]]["fixes"]["prefixes"].Count;
-            string prefix = datasetPairs[datasetNames[CB_Datasets.SelectedIndex]]["fixes"]["prefixes"].ElementAt<string>(rand.Next(prefixSize));
-            string wordOut = "";
-
-            if (Regex.Match(prefix, "[aeiouy]$").Success)
-                chopToFit = true;
-
-            if (Regex.Match(wordIn, "^[aeiouy]").Success && chopToFit)
-                wordOut = prefix + wordIn.Substring(1);
-            else
-                wordOut = prefix + wordIn;
-
-            return wordOut;
-        }
-
-        private string addSuffix(string wordIn)
-        {
-            bool chopToFit = false;
-            int suffixSize = datasetPairs[datasetNames[CB_Datasets.SelectedIndex]]["fixes"]["suffixes"].Count;
-            string suffix = datasetPairs[datasetNames[CB_Datasets.SelectedIndex]]["fixes"]["suffixes"].ElementAt<string>(rand.Next(suffixSize));
-            string wordOut = "";
-
-            if (Regex.Match(suffix, "^[aeiouy]").Success)
-                chopToFit = true;
-
-            if (Regex.Match(wordIn, "[aeiouy]$").Success && chopToFit)
-                wordOut = suffix + wordIn.Substring(0, wordIn.Length - 1);
-            else
-                wordOut = suffix + wordIn;
-
-            return wordOut;
         }
 
         private void CheckProperNames_CheckedChanged(object sender, EventArgs e)
@@ -347,11 +181,11 @@ namespace BunnyNameGen
 
         private void loadDatasetsToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            FD_OpenDataset.Filter = "Text files (*.txt)|*.txt";
+            FD_OpenDataset.Filter = "Text files (*.txt)|*.txt|XML Files (*.xml)|*.xml";
             FD_OpenDataset.ShowDialog();
 
-            datasetNames.Add(System.IO.Path.GetFileNameWithoutExtension(FD_OpenDataset.FileName));
-            loadDataset(FD_OpenDataset.FileName);
+            if(loadDataset(FD_OpenDataset.FileName))
+                datasetNames.Add(System.IO.Path.GetFileNameWithoutExtension(FD_OpenDataset.FileName));
         }
 
         private void toTextToolStripMenuItem_Click(object sender, EventArgs e)
@@ -368,15 +202,15 @@ namespace BunnyNameGen
 
             if (datasetOut != null)
             {
-                for (int i = 0; i < datasets[datasetName].Count; i += 10)
+                for (int i = 0; i < datasets[datasetName].GetWordCount(); i += 10)
                 {
                     string line = "";
                     for (int i2 = 0; i2 < 10; i2++)
                     {
-                        if (i + i2 >= datasets[datasetName].Count)
+                        if (i + i2 >= datasets[datasetName].GetWordCount())
                             break;
 
-                        line += datasets[datasetName][i + i2] + " ";
+                        line += datasets[datasetName].GetWord(i + i2) + " ";
                     }
                     datasetOut.WriteLine(line);
                 }
@@ -385,8 +219,7 @@ namespace BunnyNameGen
             }
             else
             {
-                logFile.WriteLine("Failed to create StreamWriter for " + datasetName + ". No output made");
-                logFile.Flush();
+                logFile.LogError("Failed to create StreamWriter for " + datasetName + ". No output made");
             }
         }
 
@@ -406,9 +239,9 @@ namespace BunnyNameGen
                 datasetOut.WriteStartDocument();
                 datasetOut.WriteStartElement("DatasetWords");
 
-                foreach (string word in datasets[datasetName])
+                for(int i = 0; i < datasets[datasetName].GetWordCount(); i++)
                 {
-                    datasetOut.WriteElementString("Word", word);
+                    datasetOut.WriteElementString("Word", datasets[datasetName].GetWord(i));
                 }
 
                 datasetOut.WriteEndElement();
@@ -418,14 +251,19 @@ namespace BunnyNameGen
             }
             else
             {
-                logFile.WriteLine("Failed to create XmlWriter for " + datasetName + ". No output made");
-                logFile.Flush();
+                logFile.LogError("Failed to create XmlWriter for " + datasetName + ". No output made");
             }
         }
 
         private void Form1_FormClosing(object sender, FormClosingEventArgs e)
         {
-            logFile.Close();
+
+        }
+
+        private void infoToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            MessageBox.Show("Version Number: " + Assembly.GetExecutingAssembly().GetName().Version.ToString(), "BunnyNameGen",
+            MessageBoxButtons.OKCancel, MessageBoxIcon.Asterisk);
         }
     }
 }
