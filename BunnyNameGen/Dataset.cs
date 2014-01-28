@@ -31,13 +31,12 @@ namespace BunnyNameGen
         public bool loadDatasetTxt(string nameIn)
         {
             name = Path.GetFileNameWithoutExtension(nameIn);
-            string datasetName = name + ".txt";
 
-            if (File.Exists(datasetName))
+            if (File.Exists(nameIn))
             {
                 string line;
                 // Don't know if it's right to use that encoding on every file but I don't really give a shit
-                StreamReader datasetFile = new StreamReader(datasetName, Encoding.GetEncoding(1252));
+                StreamReader datasetFile = new StreamReader(nameIn, Encoding.GetEncoding(1252));
 
                 while ((line = datasetFile.ReadLine()) != null)
                 {
@@ -65,12 +64,11 @@ namespace BunnyNameGen
         public bool loadDatasetXML(string nameIn)
         {
             name = Path.GetFileNameWithoutExtension(nameIn);
-            string datasetName = "XMLDatasets/" + name + ".xml";
             List<string> fileWords = new List<string>();
 
-            if (File.Exists(datasetName))
+            if (File.Exists(nameIn))
             {
-                XDocument doc = XDocument.Load(datasetName);
+                XDocument doc = XDocument.Load(nameIn);
 
                 var words = doc.Descendants("Word");
 
