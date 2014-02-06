@@ -191,6 +191,7 @@
             0,
             0,
             0});
+            this.NUD_MaxWordLength.ValueChanged += new System.EventHandler(this.NUD_MaxWordLength_ValueChanged);
             // 
             // NUD_MinWordLength
             // 
@@ -203,6 +204,7 @@
             0,
             0,
             0});
+            this.NUD_MinWordLength.ValueChanged += new System.EventHandler(this.NUD_MinWordLength_ValueChanged);
             // 
             // LB_NumberOfNames
             // 

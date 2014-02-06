@@ -53,6 +53,9 @@ namespace BunnyNameGen
             FD_OpenDataset.InitialDirectory = Application.StartupPath;
 
             logFile.LogInfo("Started BunnyNameGen Version " + Assembly.GetExecutingAssembly().GetName().Version.ToString());
+
+            NUD_MaxWordLength.Minimum = NUD_MinWordLength.Value;
+            NUD_MinWordLength.Maximum = NUD_MaxWordLength.Value;
         }
 
         private void loadDefaultDatasets()
@@ -278,6 +281,16 @@ namespace BunnyNameGen
         {
             MessageBox.Show("Version Number: " + Assembly.GetExecutingAssembly().GetName().Version.ToString(), "BunnyNameGen",
             MessageBoxButtons.OKCancel, MessageBoxIcon.Asterisk);
+        }
+
+        private void NUD_MinWordLength_ValueChanged(object sender, EventArgs e)
+        {
+            NUD_MaxWordLength.Minimum = NUD_MinWordLength.Value;
+        }
+
+        private void NUD_MaxWordLength_ValueChanged(object sender, EventArgs e)
+        {
+            NUD_MinWordLength.Maximum = NUD_MaxWordLength.Value;
         }
     }
 }
