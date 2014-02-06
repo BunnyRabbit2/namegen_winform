@@ -72,6 +72,20 @@ namespace BunnyNameGen
                 logFile.LogInfo("No XMLDatasets folder. No datasets loaded");
             }
 
+            if (Directory.Exists("Datasets"))
+            {
+                string[] XmlFiles = Directory.GetFiles("Datasets", "*.txt");
+                foreach (string file in XmlFiles)
+                {
+                    if (loadDataset(file))
+                        datasetNames.Add(Path.GetFileNameWithoutExtension(file));
+                }
+            }
+            else
+            {
+                SSLabel1.Text = "INFO: No Datasets folder. No datasets loaded";
+                logFile.LogInfo("No Datasets folder. No datasets loaded");
+            }
         }
 
         private bool loadDataset(string datasetName)
